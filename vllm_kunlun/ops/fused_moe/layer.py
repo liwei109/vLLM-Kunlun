@@ -21,8 +21,6 @@ from vllm.model_executor.layers.fused_moe.config import (
 from vllm.model_executor.custom_op import CustomOp
 from vllm.platforms import current_platform
 
-from vllm_kunlun.ops.quantization.compressed_tensors_moe import CompressedTensorsW8A8Int8MoEMethod
-
 
 class FusedMoEMethodBase(VllmFusedMoEMethodBase):
     """FusedMoEMethodBase"""

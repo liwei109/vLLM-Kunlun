@@ -1149,3 +1149,201 @@ def fake_moe_post(
     return None
 
 moe_post.register_fake(fake_moe_post)
+
+
+##################################################
+# -------------- cutlass_scaled_mm ---------------
+##################################################
+@custom_op("_C::cutlass_scaled_mm", mutates_args=())
+def cutlass_scaled_mm(
+    out: torch.Tensor,
+    a: torch.Tensor,
+    b: torch.Tensor,
+    scale_a: torch.Tensor,
+    scale_b: torch.Tensor,
+    bias: Optional[torch.Tensor] = None,
+)-> None:
+    torch.ops.xspeedgate_ops.cutlass_scaled_mm(
+        out,
+        a,
+        b,
+        scale_a,
+        scale_b,
+        bias
+    )
+
+@impl("_C::cutlass_scaled_mm", "CUDA")
+def cutlass_scaled_mm_cuda(
+    out: torch.Tensor,
+    a: torch.Tensor,
+    b: torch.Tensor,
+    scale_a: torch.Tensor,
+    scale_b: torch.Tensor,
+    bias: Optional[torch.Tensor] = None,
+)-> None:
+    torch.ops.xspeedgate_ops.cutlass_scaled_mm(
+        out,
+        a,
+        b,
+        scale_a,
+        scale_b,
+        bias
+    )
+
+def fake_cutlass_scaled_mm(
+    out: torch.Tensor,
+    a: torch.Tensor,
+    b: torch.Tensor,
+    scale_a: torch.Tensor,
+    scale_b: torch.Tensor,
+    bias: Optional[torch.Tensor] = None,
+)-> None:
+    return None
+
+cutlass_scaled_mm.register_fake(fake_cutlass_scaled_mm)
+
+
+##################################################
+# ---------- cutlass_scaled_mm_azp ---------------
+##################################################
+@custom_op("_C::cutlass_scaled_mm_azp", mutates_args=())
+def cutlass_scaled_mm_azp(
+    out: torch.Tensor,
+    a: torch.Tensor,
+    b: torch.Tensor,
+    scale_a: torch.Tensor,
+    scale_b: torch.Tensor,
+    azp_adj: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+    bias: Optional[torch.Tensor] = None,
+)-> None:
+    torch.ops.xspeedgate_ops.cutlass_scaled_mm_azp(
+        out,
+        a,
+        b,
+        scale_a,
+        scale_b,
+        azp_adj,
+        azp,
+        bias
+    )
+
+@impl("_C::cutlass_scaled_mm_azp", "CUDA")
+def cutlass_scaled_mm_azp_cuda(
+    out: torch.Tensor,
+    a: torch.Tensor,
+    b: torch.Tensor,
+    scale_a: torch.Tensor,
+    scale_b: torch.Tensor,
+    azp_adj: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+    bias: Optional[torch.Tensor] = None,
+)-> None:
+    torch.ops.xspeedgate_ops.cutlass_scaled_mm_azp(
+        out,
+        a,
+        b,
+        scale_a,
+        scale_b,
+        azp_adj,
+        azp,
+        bias
+    )
+
+def fake_cutlass_scaled_mm_azp(
+    out: torch.Tensor,
+    a: torch.Tensor,
+    b: torch.Tensor,
+    scale_a: torch.Tensor,
+    scale_b: torch.Tensor,
+    azp_adj: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+    bias: Optional[torch.Tensor] = None,
+)-> None:
+    return None
+
+cutlass_scaled_mm_azp.register_fake(fake_cutlass_scaled_mm_azp)
+
+
+##################################################
+# ---------- dynamic_scaled_int8_quant -----------
+##################################################
+@custom_op("_C::dynamic_scaled_int8_quant", mutates_args=())
+def dynamic_scaled_int8_quant(
+    y: torch.Tensor,
+    x: torch.Tensor,
+    scale: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+)-> None:
+    torch.ops.xspeedgate_ops.dynamic_scaled_int8_quant(
+        y,
+        x,
+        scale,
+        azp
+    )
+
+@impl("_C::dynamic_scaled_int8_quant", "CUDA")
+def dynamic_scaled_int8_quant_cuda(
+    y: torch.Tensor,
+    x: torch.Tensor,
+    scale: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+)-> None:
+    torch.ops.xspeedgate_ops.dynamic_scaled_int8_quant(
+        y,
+        x,
+        scale,
+        azp
+    )
+
+def fake_dynamic_scaled_int8_quant(
+    y: torch.Tensor,
+    x: torch.Tensor,
+    scale: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+)-> None:
+    return None
+
+dynamic_scaled_int8_quant.register_fake(fake_dynamic_scaled_int8_quant)
+
+
+##################################################
+# ---------- static_scaled_int8_quant ------------
+##################################################
+@custom_op("_C::static_scaled_int8_quant", mutates_args=())
+def static_scaled_int8_quant(
+    y: torch.Tensor,
+    x: torch.Tensor,
+    scale: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+)-> None:
+    torch.ops.xspeedgate_ops.static_scaled_int8_quant(
+        y,
+        x,
+        scale,
+        azp
+    )
+
+@impl("_C::static_scaled_int8_quant", "CUDA")
+def static_scaled_int8_quant_cuda(
+    y: torch.Tensor,
+    x: torch.Tensor,
+    scale: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+)-> None:
+    torch.ops.xspeedgate_ops.static_scaled_int8_quant(
+        y,
+        x,
+        scale,
+        azp
+    )
+
+def fake_static_scaled_int8_quant(
+    y: torch.Tensor,
+    x: torch.Tensor,
+    scale: torch.Tensor,
+    azp: Optional[torch.Tensor] = None,
+)-> None:
+    return None
+
+static_scaled_int8_quant.register_fake(fake_static_scaled_int8_quant)

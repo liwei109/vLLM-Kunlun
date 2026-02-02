@@ -21,6 +21,21 @@ repos:
         args: ["--maxkb=10240"]  # Maximum allowed file size (10MB)
 
   # -----------------------
+  # Python Linting (Ruff)
+  # Characteristics: Fast, suitable for CI, replaces flake8/isort/etc.
+  # -----------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.14  # Ruff version
+    hooks:
+      - id: ruff-check  # Main linting checks
+        types_or: [ python, pyi ]  # Check .py and .pyi files
+        args: [ --fix ]  # Auto-fix fixable issues
+        # Checks include:
+        # - Unused imports/variables
+        # - Syntax errors
+        # - Code style issues
+        # - Potential bugs
+  # -----------------------
   # Python import sorting (compatible with black)
   # -----------------------
   - repo: https://github.com/pycqa/isort
@@ -30,7 +45,7 @@ repos:
         args: ["--profile=black"]  # Use black-compatible configuration
         # Auto-fix import sorting:
         # 1. Standard library imports
-        # 2. Third-party library imports  
+        # 2. Third-party library imports
         # 3. Local application/library specific imports
         # Separated by blank lines between groups
 
@@ -48,21 +63,6 @@ repos:
         # - Fast execution
         # - Produces uniform code style
 
-  # -----------------------
-  # Python Linting (Ruff)
-  # Characteristics: Fast, suitable for CI, replaces flake8/isort/etc.
-  # -----------------------
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.14  # Ruff version
-    hooks:
-      - id: ruff-check  # Main linting checks
-        types_or: [ python, pyi ]  # Check .py and .pyi files
-        args: [ --fix ]  # Auto-fix fixable issues
-        # Checks include:
-        # - Unused imports/variables
-        # - Syntax errors
-        # - Code style issues
-        # - Potential bugs
   - repo: https://github.com/jackdewinter/pymarkdown
     rev: v0.9.29
     hooks:

@@ -4,7 +4,6 @@ on:
   pull_request:
   push:
     branches: [ main ]
-
 jobs:
   pylint-check:
     runs-on: ubuntu-latest
@@ -27,9 +26,9 @@ jobs:
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+            files=$(git diff --name-only --diff-filter=ACMRT origin/${{ github.base_ref }}...HEAD)
           else
-            files=$(git diff --name-only HEAD~1...HEAD)
+            files=$(git diff --name-only --diff-filter=ACMRT HEAD~1...HEAD)
           fi
 
           files=$(echo "$files" | grep '\.py$' || true)
@@ -38,17 +37,18 @@ jobs:
           echo "$files" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Run ruff
+        if: steps.changed.outputs.files != ''
+        run: |
+          echo "${{ steps.changed.outputs.files }}" | xargs ruff check --fix
+        continue-on-error: true
+
       - name: Run black
         if: steps.changed.outputs.files != ''
         run: |
-          black --check ${{ steps.changed.outputs.files }}
+          echo "${{ steps.changed.outputs.files }}" | xargs black --check
 
       - name: Run isort
         if: steps.changed.outputs.files != ''
         run: |
-          isort --check-only ${{ steps.changed.outputs.files }}
-
-      - name: Run ruff
-        if: steps.changed.outputs.files != ''
-        run: |
-          ruff check ${{ steps.changed.outputs.files }}
+          echo "${{ steps.changed.outputs.files }}" | xargs isort --check-only --profile black

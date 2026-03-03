@@ -239,27 +239,27 @@ class KunlunMoeWNA16Method(MoeWNA16Method):
         logical_replica_count: Optional[torch.Tensor] = None,
     ) -> Union[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
 
-        w13_weight = dequant_int4(
-            qweight=layer.w13_qweight,
-            scale=self.moe_quant_config.w1_scale,
-            zp=self.moe_quant_config.w1_zp,
-            int4_signed=False,
-            use_mode_fast=layer.align_type,
-        )
+        # w13_weight = dequant_int4(
+        #     qweight=layer.w13_qweight,
+        #     scale=self.moe_quant_config.w1_scale,
+        #     zp=self.moe_quant_config.w1_zp,
+        #     int4_signed=False,
+        #     use_mode_fast=layer.align_type,
+        # )
 
-        w2_weight = dequant_int4(
-            qweight=layer.w2_qweight,
-            scale=self.moe_quant_config.w2_scale,
-            zp=self.moe_quant_config.w2_zp,
-            int4_signed=False,
-            use_mode_fast=layer.align_type,
-        )
+        # w2_weight = dequant_int4(
+        #     qweight=layer.w2_qweight,
+        #     scale=self.moe_quant_config.w2_scale,
+        #     zp=self.moe_quant_config.w2_zp,
+        #     int4_signed=False,
+        #     use_mode_fast=layer.align_type,
+        # )
         
         if self.moe.use_ep:
             return ops.fused_moe_ep(
                 x,
-                w13_weight,
-                w2_weight,
+                layer.w13_weight,
+                layer.w2_weight,
                 router_logits,
                 self.moe.ep_rank,
                 top_k,
@@ -272,8 +272,8 @@ class KunlunMoeWNA16Method(MoeWNA16Method):
         else:
             return ops.fused_moe(
                 x,
-                w13_weight,
-                w2_weight,
+                layer.w13_weight,
+                layer.w2_weight,
                 router_logits,
                 self.moe.ep_rank,
                 top_k,
@@ -286,6 +286,8 @@ class KunlunMoeWNA16Method(MoeWNA16Method):
                 e_score_correction_bias=e_score_correction_bias,
                 w1_bias=getattr(layer, "w13_bias", None),
                 w2_bias=getattr(layer, "w2_bias", None),
+                w1_perchannel_max=self.moe_quant_config.w1_scale * 7,
+                w2_perchannel_max=self.moe_quant_config.w2_scale * 7,
             )
 
 

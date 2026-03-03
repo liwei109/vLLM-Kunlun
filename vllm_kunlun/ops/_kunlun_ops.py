@@ -389,6 +389,8 @@ class KunlunOps:
         w2_bias: Optional[torch.Tensor] = None,
         scoring_func: str = "softmax",
         e_score_correction_bias: Optional[torch.Tensor] = None,
+        w1_perchannel_max: torch.Tensor = None,
+        w2_perchannel_max:torch.Tensor = None,
     ) -> torch.Tensor:
         """fused_moe"""
         global_num_experts, up_gate_size, _ = w1.shape
@@ -544,13 +546,23 @@ class KunlunOps:
             moe_expand = moe_expand.view(M * moe_top_k, hidden_dim)
 
             if M < 1024:
-                torch.ops._C.moe_fc(
+                # torch.ops._C.moe_fc(
+                #     x=moe_expand,
+                #     weight=w1,
+                #     sorted_tokens_num_lod=sorted_tokens_num_lod,
+                #     sorted_tokens_idx=sorted_tokens_idx,
+                #     moe_topk=moe_top_k,
+                #     y=y,
+                # )
+                kunlun_ops.moe_fc_v3(
                     x=moe_expand,
                     weight=w1,
                     sorted_tokens_num_lod=sorted_tokens_num_lod,
                     sorted_tokens_idx=sorted_tokens_idx,
                     moe_topk=moe_top_k,
                     y=y,
+                    w_perchannel_max=w1_perchannel_max,
+                    use_pack_int4 = True,
                 )
 
                 d = y.shape[-1] // 2
@@ -560,14 +572,25 @@ class KunlunOps:
 
                 out1 = out1.reshape(-1, out1.shape[-1])
             else:
-                torch.ops._C.moe_fc(
+                # torch.ops._C.moe_fc(
+                #     x=moe_expand,
+                #     weight=w1,
+                #     sorted_tokens_num_lod=sorted_tokens_num_lod,
+                #     sorted_tokens_idx=sorted_tokens_idx,
+                #     moe_topk=moe_top_k,
+                #     y=y,
+                #     act="SWISH_GLU",
+                # )
+                kunlun_ops.moe_fc_v3(
                     x=moe_expand,
                     weight=w1,
                     sorted_tokens_num_lod=sorted_tokens_num_lod,
                     sorted_tokens_idx=sorted_tokens_idx,
                     moe_topk=moe_top_k,
                     y=y,
-                    act="SWISH_GLU",
+                    act=None,
+                    w_perchannel_max=w1_perchannel_max,
+                    use_pack_int4 = True,
                 )
 
                 y = y[..., : y.shape[-1] // 2]
@@ -581,14 +604,25 @@ class KunlunOps:
                 device=hidden_states.device,
             )
 
-            torch.ops._C.moe_fc(
+            # torch.ops._C.moe_fc(
+            #     x=out1,
+            #     weight=w2,
+            #     sorted_tokens_num_lod=sorted_tokens_num_lod,
+            #     sorted_tokens_idx=sorted_tokens_idx,
+            #     moe_topk=moe_top_k,
+            #     y=out,
+            # )
+            kunlun_ops.moe_fc_v3(
                 x=out1,
                 weight=w2,
                 sorted_tokens_num_lod=sorted_tokens_num_lod,
                 sorted_tokens_idx=sorted_tokens_idx,
                 moe_topk=moe_top_k,
                 y=out,
+                w_perchannel_max=w2_perchannel_max,
+                use_pack_int4 = True,
             )
+            
 
             dequant_scale = torch.ones(
                 [M, moe_top_k], dtype=torch.float32, device=out.device

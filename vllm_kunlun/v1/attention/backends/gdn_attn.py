@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
 """Backend for GatedDeltaNet attention."""
 
+from typing import Optional
 from dataclasses import dataclass
 
 import torch
@@ -51,8 +52,14 @@ class GDNAttentionMetadata:
     )
     non_spec_query_start_loc_cpu: torch.Tensor | None = None
     spec_state_indices_tensor: torch.Tensor | None = None  # shape: [batch, num_spec]
+    spec_state_indices_tensor_cpu: Optional[torch.Tensor] = (
+        None  # shape: [batch, num_spec]
+    )
     non_spec_state_indices_tensor: torch.Tensor | None = (
         None  # shape: [batch - num_spec_decodes,]
+    )
+    non_spec_query_start_loc_cpu: Optional[torch.Tensor] = (
+        None  # shape: [batch - num_spec_decodes + 1,]
     )
     non_spec_state_indices_tensor_cpu: torch.Tensor | None = (
         None  # shape: [batch - num_spec_decodes,]
@@ -68,6 +75,7 @@ class GDNAttentionMetadata:
     non_spec_token_indx: torch.Tensor | None = None
 
     num_accepted_tokens: torch.Tensor | None = None  # shape: [batch,]
+    num_accepted_tokens_cpu: Optional[torch.Tensor] = None  # shape: [batch,]
 
     # The following attributes are for triton implementation of causal_conv1d
     nums_dict: dict | None = None
@@ -429,6 +437,9 @@ class GDNAttentionMetadataBuilder(AttentionMetadataBuilder[GDNAttentionMetadata]
             spec_token_indx=spec_token_indx,
             non_spec_token_indx=non_spec_token_indx,
             num_accepted_tokens=num_accepted_tokens,
+            num_accepted_tokens_cpu=(
+                num_accepted_tokens.cpu() if num_accepted_tokens is not None else None
+            ),
             nums_dict=nums_dict,
             batch_ptr=batch_ptr,
             token_chunk_offset_ptr=token_chunk_offset_ptr,
@@ -454,6 +465,15 @@ class GDNAttentionMetadataBuilder(AttentionMetadataBuilder[GDNAttentionMetadata]
             f"and number of tokens ({m.num_actual_tokens}) <= "
             f"cudagraph capture sizes ({self.decode_cudagraph_max_bs})."
         )
+
+        # adaptor for mtp. If query_start_loc is [3, 3, 3, 2], make it [3, 3, 3].
+        if (
+            m.query_start_loc.shape[0] > 2
+            and m.query_start_loc[-1] - m.query_start_loc[-2]
+            < m.query_start_loc[-2] - m.query_start_loc[-3]
+        ):
+            m.query_start_loc = m.query_start_loc[:-1]
+            m.seq_lens_cpu = m.seq_lens_cpu[:-1]
 
         num_accepted_tokens = torch.diff(m.query_start_loc)
         num_decode_draft_tokens_cpu = (num_accepted_tokens - 1).cpu()

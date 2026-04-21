@@ -1676,6 +1676,7 @@ def scaled_int8_quant_cuda(
         azp = None if symmetric else torch.empty_like(scale, dtype=torch.int32)
         if symmetric:
             # NOTE: For quant2d ops, scale represents max.
+            x = torch.nan_to_num(x, nan=0.0)
             kunlun_ops.quant2d(x=x.contiguous(), y=x_q, max=scale, force_sdnn=True)
         else:
             torch.ops.xspeedgate_ops.dynamic_scaled_int8_quant(

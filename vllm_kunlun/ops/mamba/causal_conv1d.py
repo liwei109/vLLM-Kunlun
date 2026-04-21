@@ -125,6 +125,7 @@ def causal_conv1d_update(
     conv_state_indices: Optional[torch.Tensor] = None,
     conv_state_indices_cpu: Optional[torch.Tensor] = None,
     num_accepted_tokens: Optional[torch.Tensor] = None,
+    num_accepted_tokens_cpu: Optional[torch.Tensor] = None,
     query_start_loc: torch.Tensor | None = None,
     max_query_len: int = -1,
     pad_slot_id: int = PAD_SLOT_ID,
@@ -214,12 +215,20 @@ def causal_conv1d_update(
         out = out.squeeze(1)
         return out
     else:
-        return torch_causal_conv1d_update_spec(
-            x,
-            conv_state,
-            weight,
-            bias,
-            activation,
-            conv_state_indices=conv_state_indices,
-            num_accepted_tokens=num_accepted_tokens,
+        out = torch.empty_like(x)
+        stride = conv_state.stride()[0]
+        kunlun_ops.causal_conv1d_update(
+                    x,
+                    weight,
+                    out,
+                    conv_state,
+                    None,
+                    bias,
+                    conv_state_indices_cpu=conv_state_indices_cpu,
+                    conv_state_indices_xpu=conv_state_indices.contiguous(),
+                    num_accepted_tokens_xpu=num_accepted_tokens,
+                    num_accepted_tokens_cpu=num_accepted_tokens_cpu,
+                    act="SWISH",
+                    state_seq_stride=stride,
+                    is_ncw=False
         )
